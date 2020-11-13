@@ -1,2 +1,2 @@
 # Redes
-Practicas/Proyectos de redes
+Repositorio para Practicas y el Proyectos de de Redes de computadoras.
