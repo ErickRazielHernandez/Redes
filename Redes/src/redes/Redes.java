@@ -5,7 +5,7 @@ package redes;
 
 /**
  *
- * @author HP
+ * @author Hernández Magallón Erick Raziel
  */
 public class Redes {
 
