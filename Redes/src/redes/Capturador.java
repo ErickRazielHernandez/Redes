@@ -171,8 +171,8 @@ public class Capturador {
         }
     
     public static void main(String[] args) {
-        Pcap pcap=null;
-           try{
+            Pcap pcap=null;
+            try{
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));   
             List<PcapIf> alldevs = new ArrayList<PcapIf>(); // Will be filled with NICs
             StringBuilder errbuf = new StringBuilder(); // For any error msgs
@@ -243,16 +243,7 @@ public class Capturador {
                     return;
             }//if
 
-                   /********F I L T R O********/
-            PcapBpfProgram filter = new PcapBpfProgram();
-            String expression =""; // "port 80";
-            int optimize = 0; // 1 means true, 0 means false
-            int netmask = 0;
-            int r2 = pcap.compile(filter, expression, optimize, netmask);
-            if (r2 != Pcap.OK) {
-                System.out.println("Filter error: " + pcap.getErr());
-            }//if
-            pcap.setFilter(filter);
+            
             }
 
             PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
