@@ -3,6 +3,8 @@ package redes;
 import java.io.*;
 import java.util.*;
 import org.jnetpcap.*;
+import org.jnetpcap.packet.PcapPacket;
+import org.jnetpcap.packet.PcapPacketHandler;
 
 public class EjecutadorDeAnalizador {
     private Scanner lector;
@@ -33,11 +35,12 @@ public class EjecutadorDeAnalizador {
     
     private void leer_de_archivo ( ) {
         System.out.println("Ingrese la ruta del archivo");
+        lector.next();
         String ruta = lector.nextLine();
         pcap = Pcap.openOffline(ruta, buffer_de_errores);
         if (pcap == null) {
             System.err.printf("Error al acceder al dispositivo: "+ buffer_de_errores.toString());
-            return;
+            System.exit(1);
         }
     }
     
@@ -45,7 +48,7 @@ public class EjecutadorDeAnalizador {
         int revision = Pcap.findAllDevs(dispositivos, buffer_de_errores);
         if (revision == Pcap.NOT_OK || dispositivos.isEmpty()) {
             System.err.printf("No se encontraron dispositivos %s", dispositivos.toString());
-            return;
+            System.exit(1);
         }
         
         System.out.println("Dispositivos encontrados:");
@@ -56,10 +59,6 @@ public class EjecutadorDeAnalizador {
                 final byte[] mac = dispositivo.getHardwareAddress();
                 String dir_mac = ( mac == null ) ? "No tiene direccion MAC" : byte_to_string(mac);
                 System.out.printf("#%d: %s [%s] MAC:[%s]\n", i++, dispositivo.getName(), descripcion, dir_mac);
-                List<PcapAddr> direcciones = dispositivo.getAddresses();
-                for(PcapAddr direccion:direcciones){
-                    System.out.println(direccion.getAddr().toString());
-                }
             } catch ( Exception e ) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
@@ -77,26 +76,42 @@ public class EjecutadorDeAnalizador {
         pcap = Pcap.openLive(device.getName(), longitud_captura, banderas, tiempo_espera, buffer_de_errores);
         if (pcap == null) {
             System.err.printf("Error al abrir la interfaz: " + buffer_de_errores.toString());
-            return;
+            System.exit(1);
         }
     }
     
     private void establecer_filtro () {
         PcapBpfProgram filter = new PcapBpfProgram();
         String expression =""; // "port 80";
-        int optimize = 0; // 1 means true, 0 means false
+        int optimize = 0; // 1 es true, 0 es false
         int netmask = 0;
         int r2 = pcap.compile(filter, expression, optimize, netmask);
         if (r2 != Pcap.OK) {
-            System.out.println("Filter error: " + pcap.getErr());
-        }//if
+            System.out.println("Error al establecer filtro: " + pcap.getErr());
+        }
         pcap.setFilter(filter);
     }
     
     private void capturar_al_vuelo () {
         elegir_interfaz_de_red();
         establecer_filtro();
-        
+    }
+    
+    private void iniciar_analisis () {
+        PcapPacketHandler<String> manejador_de_paquetes = new PcapPacketHandler<String>() {
+            public void nextPacket(PcapPacket paquete, String usuario) {
+                int longitud = (paquete.getUByte(12)*256) + paquete.getUByte(13);
+                if ( longitud < 1500 ) {
+                    
+                } else {
+                    System.out.println("\n-->Trama ETHERNET\n");
+                    System.out.printf("\nLongitud: %d (%04X)\n\n",longitud,longitud );
+                }
+                System.out.println("\nTrama en Crudo: \n\n" + paquete.toHexdump());
+            }
+        };
+        pcap.loop(-1, manejador_de_paquetes, " ");
+        pcap.close();
     }
     
     public void mostrar_menu() {
@@ -109,6 +124,6 @@ public class EjecutadorDeAnalizador {
         } else {
             capturar_al_vuelo();
         }
-        
+        iniciar_analisis();
     }
 }
