@@ -102,9 +102,9 @@ public class EjecutadorDeAnalizador {
             public void nextPacket(PcapPacket paquete, String usuario) {
                 int longitud = (paquete.getUByte(12)*256) + paquete.getUByte(13);
                 if ( longitud < 1500 ) {
-                    
+                    AnalizadorLLC.analizar_paquete(paquete);
                 } else {
-                    System.out.println("\n-->Trama ETHERNET\n");
+                    System.out.println("\nTrama ETHERNET\n");
                     System.out.printf("\nLongitud: %d (%04X)\n\n",longitud,longitud );
                 }
                 System.out.println("\nTrama en Crudo: \n\n" + paquete.toHexdump());

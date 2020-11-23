@@ -1,12 +1,160 @@
 package redes;
 
 import org.jnetpcap.packet.PcapPacket;
-import static redes.Capturador.getIthBit;
-import static redes.Capturador.printCodigoSAP;
-import static redes.Capturador.printCodigoSupervision;
-import static redes.Capturador.printCodigoU;
 
 public class AnalizadorLLC {
+    private static String asString(final byte[] mac) {
+        final StringBuilder buf = new StringBuilder();
+        for (byte b : mac) {
+            if (buf.length() != 0) {
+                buf.append(':');
+            }
+            if (b >= 0 && b < 16) {
+                buf.append('0');
+            }
+            buf.append(Integer.toHexString((b < 0) ? b + 256 : b).toUpperCase());
+        }
+        return buf.toString();
+    }
+    
+    private static void printCodigoSAP ( int valor ) {
+        System.out.printf("%02X - ", (byte)valor);
+        switch ((valor)&0xFF) {
+            case 0x00:
+                System.out.println("Null SAP");
+                break;
+            case 0x04:
+                System.out.println("SNA");
+                break;
+            case 0x05:
+                System.out.println("SNA");
+                break;
+            case 0x06:
+                System.out.println("TCP");
+                break;
+            case 0x08:
+                System.out.println("SNA");
+                break;
+            case 0x0C:
+                System.out.println("SNA");
+                break;
+            case 0x42:
+                System.out.println("Spanning Tree");
+                break;
+            case 0x7F:
+                System.out.println("ISO 802.2");
+                break;
+            case 0x80:
+                System.out.println("XNS");
+                break;
+            case 0xAA:
+                System.out.println("SNAP");
+                break;
+            case 224:
+                System.out.println("IPX");
+                break;
+            case 240:
+                System.out.println("NetBIOS");
+                break;
+            case 0xF8:
+                System.out.println("RPL");
+                break;
+            case 0xFC:
+                System.out.println("RPL");
+                break;
+            case 0xFE:
+                System.out.println("OSI");
+                break;
+            case 0xFF:
+                System.out.println("Global SAP");
+                break;
+            default:
+                System.out.println("Otro");
+                break;
+        }
+    }
+    
+    private static void printCodigoU ( int valor ) {
+        System.out.printf("Código de trama U: \n%02X - ",(byte)valor);
+        switch ( valor & (0x1F) ) {
+            case 0x10:
+                System.out.println("SNRM : Activación modo respuesta normal");
+                break;
+            case 0x1B:
+                System.out.println("SNRME : Activación modo respuesta normal (ampliado)");
+                break;
+            case 0x07:
+                System.out.println("SABM : Activación modo respuesta asíncrona balanceada");
+                break;
+            case 0x0F:
+                System.out.println("SABME : Activación modo respuesta asíncrona balanceada (ampliado)");
+                break;
+            case 0x00:
+                System.out.println("Información sin numerar");
+                break;
+            case 0x0C:
+                System.out.println("Reconocimiento sin numerar");
+                break;
+            case 0x08:
+                System.out.println("DISC : Desconexión o petición de desconexión");
+                break;
+            case 0x01:
+                System.out.println("SIM : Activación de modo petición de información ");
+                break;
+            case 0x04:
+                System.out.println("UP : Muestra sin numerar");
+                break;
+            case 0x13:
+                System.out.println("RSET : Reset");
+                break;
+            case 0x17:
+                System.out.println("XID : Intercambio de ID");
+                break;
+            case 0x11:
+                System.out.println("FRMR : Rechazo de trama");
+                break;
+            default:
+                System.out.println("Otro");
+                break;
+        }
+    }
+    
+    private static int getIthBit( int data, int i ) {
+        return (data >> i) & 1;
+    }
+    private static void printCodigoSupervision ( byte ss ) {
+        System.out.printf("Código de Supervisión: ");
+        switch (ss) {
+            case 0:
+                System.out.printf("(RR) Listo para recibir : %d%d",
+                        getIthBit(ss, 1), getIthBit(ss, 0));
+            break;
+            case 1:
+                System.out.printf("(REJ) Rechazo : %d%d",
+                        getIthBit(ss, 1), getIthBit(ss, 0));
+            break;
+            case 2:
+                System.out.printf("(RNR) Receptor No listo para recibir : %d%d",
+                        getIthBit(ss, 1), getIthBit(ss, 0));
+            break;
+            case 3:
+                System.out.printf("(SREJ) Rechazo Selectivo : %d%d",
+                        getIthBit(ss, 1), getIthBit(ss, 0));
+            break;
+        }
+    }
+    public static String stringByteToBinary ( byte number ) {
+        String binary = "";
+        for ( int i = 7 ; i >= 0 ; i-- ) {
+            if ( getIthBit(number, i) == 1 ) 
+                binary.concat("1");
+            else
+                binary.concat("0");
+        }
+        System.out.println("Valor en binario "+binary);
+        return binary;
+    }
+    
     public static void analizar_paquete (PcapPacket trama) {
         System.out.printf("\nTrama IEEE802.3: LLC\n");
         int longitud = (trama.getUByte(12)*256) + trama.getUByte(13);
