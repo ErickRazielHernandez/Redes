@@ -6,13 +6,13 @@ import org.jnetpcap.*;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
 
-public class EjecutadorDeAnalizador {
+public class ClasificadorDePaquete {
     private Scanner lector;
     private List<PcapIf> dispositivos;
     private StringBuilder buffer_de_errores;
     private Pcap pcap;
     
-    public EjecutadorDeAnalizador() {
+    public ClasificadorDePaquete() {
         lector = new Scanner(System.in);
         dispositivos = new ArrayList<PcapIf>();
         buffer_de_errores = new StringBuilder();
@@ -102,12 +102,16 @@ public class EjecutadorDeAnalizador {
             public void nextPacket(PcapPacket paquete, String usuario) {
                 int longitud = (paquete.getUByte(12)*256) + paquete.getUByte(13);
                 if ( longitud < 1500 ) {
-                    AnalizadorLLC.analizar_paquete(paquete);
+                    //AnalizadorLLC.analizar_paquete(paquete);
                 } else {
-                    System.out.println("\nTrama ETHERNET\n");
-                    System.out.printf("\nLongitud: %d (%04X)\n\n",longitud,longitud );
+                    if ( longitud == 2054 )  {
+                        System.out.println("TRAMA ETHERNET");
+                        System.out.printf("Longitud: %d (%04X)\n",longitud,longitud );
+                        AnalizadorARP.analizar_trama(paquete);
+                        System.out.println("\nTrama en Crudo: \n\n" + paquete.toHexdump());
+                    }
                 }
-                System.out.println("\nTrama en Crudo: \n\n" + paquete.toHexdump());
+                
             }
         };
         pcap.loop(-1, manejador_de_paquetes, " ");
